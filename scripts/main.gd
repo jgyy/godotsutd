@@ -26,6 +26,7 @@ var _staff_delay := 0.0
 func _ready() -> void:
 	world.build()
 	spawner.world = world
+	player.enemies = enemies
 	var centre := Vector2i(World.WIDTH / 2, World.HEIGHT / 2)
 	player.position = world.cell_to_world(centre)
 	camera.limit_left = 0

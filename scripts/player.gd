@@ -23,6 +23,8 @@ var fire_cooldown := 0.0
 var fire_damage := 0
 var facing := Vector2.DOWN
 var facing_index := 0
+## Container whose children are Enemy nodes; auto-fire aims at the nearest one.
+var enemies: Node
 var _cooldown_left := 0.0
 var _invuln_left := 0.0
 
@@ -37,8 +39,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	apply_movement(input, delta)
-	if Input.is_action_pressed("fire"):
-		try_fire()
+	auto_fire()
 
 
 func apply_movement(input: Vector2, delta: float) -> void:
@@ -59,12 +60,42 @@ func can_fire() -> bool:
 	return hp > 0 and staff_tier > 0 and _cooldown_left <= 0.0
 
 
+## Fires along facing (kept for tests and manual use).
 func try_fire() -> bool:
-	if not can_fire():
+	return try_fire_toward(facing)
+
+
+func try_fire_toward(direction: Vector2) -> bool:
+	if not can_fire() or direction == Vector2.ZERO:
 		return false
 	_cooldown_left = fire_cooldown
-	fired.emit(global_position, facing, fire_damage)
+	fired.emit(global_position, direction.normalized(), fire_damage)
 	return true
+
+
+func nearest_enemy() -> Node2D:
+	if enemies == null:
+		return null
+	var best: Node2D = null
+	var best_d := INF
+	for e in enemies.get_children():
+		if not e is Node2D or e.is_queued_for_deletion():
+			continue
+		var d: float = global_position.distance_squared_to(e.global_position)
+		if d < best_d:
+			best_d = d
+			best = e
+	return best
+
+
+## Shoots at the nearest enemy when armed and off cooldown. Returns true if a shot fired.
+func auto_fire() -> bool:
+	if not can_fire():
+		return false
+	var target := nearest_enemy()
+	if target == null:
+		return false
+	return try_fire_toward(target.global_position - global_position)
 
 
 func set_staff_tier(tier: int) -> void:

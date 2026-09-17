@@ -6,7 +6,7 @@ A small top-down shooter made in Godot 4.7 from the supplied pixel-art assets.
 Open the folder in Godot 4.7 and press F5, or run `godot --path .`
 
 - Move: WASD / arrow keys (8 directions)
-- Fire: Space or left mouse (needs a staff)
+- Shooting is automatic at the nearest enemy once you hold a staff
 - Restart after game over: R
 
 Pick up the wooden staff to start shooting. Crystal and mighty staffs appear

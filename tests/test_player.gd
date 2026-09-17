@@ -75,3 +75,39 @@ func test_damage_invulnerability_and_death() -> void:
 	assert_true(died[0], "died emitted")
 	assert_eq(hps, [2, 1, 0], "health_changed sequence")
 	p.queue_free()
+
+
+func test_auto_fire_targets_nearest_enemy() -> void:
+	var p := _make()
+	p.set_staff_tier(1)
+	var container := Node2D.new()
+	tree.root.add_child(container)
+	for pos in [Vector2(300, 0), Vector2(0, 50), Vector2(-200, 0)]:
+		var e := Node2D.new()
+		e.position = pos
+		container.add_child(e)
+	var got: Array = []
+	p.fired.connect(func(o, d, dmg): got.append(d))
+	assert_true(not p.auto_fire(), "no container, no shot")
+	p.enemies = container
+	assert_true(p.auto_fire(), "shot fired")
+	assert_eq(got[0], Vector2.DOWN, "aimed at nearest (0,50)")
+	assert_true(not p.auto_fire(), "cooldown blocks second shot")
+	container.queue_free()
+	p.queue_free()
+
+
+func test_auto_fire_needs_enemy_and_staff() -> void:
+	var p := _make()
+	var container := Node2D.new()
+	tree.root.add_child(container)
+	p.enemies = container
+	p.set_staff_tier(1)
+	assert_true(not p.auto_fire(), "no enemies, no shot")
+	var e := Node2D.new()
+	e.position = Vector2(100, 0)
+	container.add_child(e)
+	p.set_staff_tier(0)
+	assert_true(not p.auto_fire(), "unarmed, no shot")
+	container.queue_free()
+	p.queue_free()
